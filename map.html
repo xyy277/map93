@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>国家领导人出席情况地图</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+* {margin:0;padding:0;box-sizing:border-box;}
+body {font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);color:#333;line-height:1.6;padding:20px;}
+.container {max-width:1200px;margin:0 auto;background:white;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.1);overflow:hidden;}
+header {background:linear-gradient(90deg,#1a237e 0%,#283593 100%);color:white;padding:25px 30px;text-align:center;}
+h1 {font-size:2.2rem;margin-bottom:10px;}
+.subtitle {font-size:1.1rem;opacity:0.9;}
+.content {display:flex;flex-wrap:wrap;padding:20px;}
+.map-container {flex:1;min-width:300px;height:500px;padding:15px;}
+.info-panel {flex:0 0 300px;padding:20px;background:#f9f9f9;border-radius:8px;margin:15px;}
+.country-list {max-height:400px;overflow-y:auto;margin-top:15px;}
+.country-item {padding:8px 12px;margin:6px 0;background:white;border-radius:6px;box-shadow:0 2px 5px rgba(0,0,0,0.05);display:flex;align-items:center;}
+.country-color {width:16px;height:16px;border-radius:50%;margin-right:10px;}
+.legend {display:flex;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+.legend-item {display:flex;align-items:center;margin:0 15px 10px;}
+.legend-color {width:20px;height:20px;border-radius:4px;margin-right:8px;}
+.note {text-align:center;padding:15px;color:#666;font-size:0.9rem;border-top:1px solid #eee;}
+@media(max-width:768px){.content{flex-direction:column;}.map-container{height:400px;}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+    <h1>国家领导人出席情况地图</h1>
+    <p class="subtitle">展示出席活动的各国领导人及其国家分布</p>
+</header>
+
+<div class="content">
+    <div class="map-container" id="worldMap"></div>
+
+    <div class="info-panel">
+        <h2>出席国家列表</h2>
+        <p>共 <strong id="countryCount">26</strong> 个国家</p>
+        <div class="country-list" id="countryList"></div>
+    </div>
+</div>
+
+<div class="legend">
+    <div class="legend-item">
+        <div class="legend-color" style="background-color: #ff4d4f;"></div>
+        <span>中国 (主办国)</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" style="background-color: #1890ff;"></div>
+        <span>出席国家</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" style="background-color: #f0f0f0;"></div>
+        <span>其他国家</span>
+    </div>
+</div>
+
+<div class="note">注：红色代表中国，蓝色/随机色代表出席国家，灰色代表未出席国家</div>
+</div>
+
+<script>
+// 出席国家数据
+const countriesData = [
+    {name:'China',value:1,label:'中国'},
+    {name:'Russia',value:2,label:'俄罗斯'},
+    {name:'North Korea',value:3,label:'朝鲜'},
+    {name:'Cambodia',value:4,label:'柬埔寨'},
+    {name:'Vietnam',value:5,label:'越南'},
+    {name:'Laos',value:6,label:'老挝'},
+    {name:'Indonesia',value:7,label:'印度尼西亚'},
+    {name:'Malaysia',value:8,label:'马来西亚'},
+    {name:'Mongolia',value:9,label:'蒙古国'},
+    {name:'Pakistan',value:10,label:'巴基斯坦'},
+    {name:'Nepal',value:11,label:'尼泊尔'},
+    {name:'Maldives',value:12,label:'马尔代夫'},
+    {name:'Kazakhstan',value:13,label:'哈萨克斯坦'},
+    {name:'Uzbekistan',value:14,label:'乌兹别克斯坦'},
+    {name:'Tajikistan',value:15,label:'塔吉克斯坦'},
+    {name:'Kyrgyzstan',value:16,label:'吉尔吉斯斯坦'},
+    {name:'Turkmenistan',value:17,label:'土库曼斯坦'},
+    {name:'Belarus',value:18,label:'白俄罗斯'},
+    {name:'Azerbaijan',value:19,label:'阿塞拜疆'},
+    {name:'Armenia',value:20,label:'亚美尼亚'},
+    {name:'Iran',value:21,label:'伊朗'},
+    {name:'Congo',value:22,label:'刚果(布)'},
+    {name:'Zimbabwe',value:23,label:'津巴布韦'},
+    {name:'Serbia',value:24,label:'塞尔维亚'},
+    {name:'Slovakia',value:25,label:'斯洛伐克'},
+    {name:'Cuba',value:26,label:'古巴'},
+    {name:'Myanmar',value:27,label:'缅甸'}
+];
+
+// 生成随机颜色函数
+function getRandomColor(){const letters='0123456789ABCDEF';let color='#';for(let i=0;i<6;i++) color+=letters[Math.floor(Math.random()*16)];return color;}
+
+// colorMap
+const colorMap = {};
+countriesData.forEach(c=>{
+    if(c.value===1) colorMap[c.name]='#ff4d4f';
+    else colorMap[c.name]=getRandomColor();
+});
+
+// 初始化图表
+const chart = echarts.init(document.getElementById('worldMap'));
+
+// fetch 世界地图 GeoJSON
+fetch('assets/geo/world.json')
+.then(res=>res.json())
+.then(worldGeoJson=>{
+    echarts.registerMap('world', worldGeoJson);
+
+    const mapData = worldGeoJson.features.map(f=>{
+        const name = f.properties.name;
+        const c = countriesData.find(c=>c.name===name);
+        return {name, value:c?c.value:0, itemStyle:{areaColor:c?colorMap[name]:'#f0f0f0'}};
+    });
+
+    const option = {
+        tooltip: {
+            trigger:'item',
+            formatter: params=>{
+                const c = countriesData.find(c=>c.name===params.name);
+                if(params.name==='China') return '<b>中国</b><br/>主办国';
+                return c?`<b>${c.label}</b><br/>出席国家`:`<b>${params.name}</b>`;
+            }
+        },
+        series:[{
+            type:'map',
+            map:'world',
+            roam:true,
+            emphasis:{label:{show:true,fontWeight:'bold'},itemStyle:{areaColor:'#2a5caa'}},
+            data: mapData
+        }]
+    };
+
+    chart.setOption(option);
+
+    // 生成右侧列表
+    const countryListElement = document.getElementById('countryList');
+    const attendingCountries = countriesData.filter(c=>c.value!==1);
+    document.getElementById('countryCount').textContent = attendingCountries.length;
+    attendingCountries.forEach(c=>{
+        const item = document.createElement('div');
+        item.className='country-item';
+        item.innerHTML=`<div class="country-color" style="background-color:${colorMap[c.name]};"></div><span>${c.label}</span>`;
+        countryListElement.appendChild(item);
+    });
+
+    window.addEventListener('resize',()=>{chart.resize();});
+});
+</script>
+</body>
+</html>
