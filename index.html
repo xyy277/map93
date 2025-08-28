@@ -3,176 +3,215 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>国家领导人出席情况地图</title>
+<title>9.3 大阅兵国家领导人出席情况地图</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <style>
-html, body {
-    width: 100%;
-    height: 100%;
+  html, body {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-body {
+  }
+  body {
     display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: linear-gradient(90deg, #1a237e 0%, #283593 100%);
+    color: white;
+    text-align: center;
+    padding: 25px 0;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 2rem;
+  }
+  .content {
+    display: flex;
+    flex: 1;
     overflow: hidden;
-}
-#mapContainer {
-    flex: 1;           
+  }
+  .map-container {
+    flex: 1;
     height: 100%;
-}
-#countryPanel {
-    width: 300px;      
-    height: 100%;
+  }
+  .info-panel {
+    width: 300px;
     background: #f9f9f9;
     padding: 20px;
-    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
     overflow-y: auto;
-}
-h2 {margin-top:0;}
-.country-item {
-    padding: 8px 12px;
-    margin: 6px 0;
-    background: white;
-    border-radius: 6px;
+  }
+  .country-item {
     display: flex;
     align-items: center;
+    margin: 6px 0;
+    padding: 6px 10px;
+    background: #fff;
+    border-radius: 6px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-.country-color {
+  }
+  .country-color {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    margin-right: 10px;
-}
+    margin-right: 8px;
+  }
+  .legend {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    margin: 0 15px 10px;
+  }
+  .legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+  .note {
+    text-align: center;
+    padding: 10px;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  @media(max-width: 768px){
+    .content {
+      flex-direction: column;
+    }
+    .info-panel {
+      width: 100%;
+      height: 250px;
+      overflow-y: auto;
+    }
+  }
 </style>
 </head>
 <body>
-<div id="mapContainer"></div>
-<div id="countryPanel">
-    <h2>出席国家列表</h2>
-    <p>共 <strong id="countryCount">0</strong> 个国家</p>
-    <div id="countryList"></div>
-</div>
+  <header>
+    <h1>9.3 大阅兵国家领导人出席情况地图</h1>
+  </header>
+  <div class="content">
+    <div id="worldMap" class="map-container"></div>
+    <div class="info-panel">
+      <h2>出席国家列表</h2>
+      <p>共 <strong id="countryCount">0</strong> 个国家</p>
+      <div id="countryList"></div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background-color:#ff4d4f"></div>
+          <span>中国（主办国）</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color:#1890ff"></div>
+          <span>出席国家</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color:#f0f0f0"></div>
+          <span>未出席国家</span>
+        </div>
+      </div>
+      <div class="note">红色：中国，蓝色：出席国家，灰色：未出席国家</div>
+    </div>
+  </div>
 
-<script>
-// 出席国家数据
-const countriesData = [
-    {name:'China', geoName:'China', value:1,label:'中国'},
-    {name:'Russia', geoName:'Russia', value:2,label:'俄罗斯'},
-    {name:'North Korea', geoName:'Dem. Rep. Korea', value:3,label:'朝鲜'},
-    {name:'Cambodia', geoName:'Cambodia', value:4,label:'柬埔寨'},
-    {name:'Vietnam', geoName:'Vietnam', value:5,label:'越南'},
-    {name:'Laos', geoName:'Laos', value:6,label:'老挝'},
-    {name:'Indonesia', geoName:'Indonesia', value:7,label:'印度尼西亚'},
-    {name:'Malaysia', geoName:'Malaysia', value:8,label:'马来西亚'},
-    {name:'Mongolia', geoName:'Mongolia', value:9,label:'蒙古国'},
-    {name:'Pakistan', geoName:'Pakistan', value:10,label:'巴基斯坦'},
-    {name:'Nepal', geoName:'Nepal', value:11,label:'尼泊尔'},
-    {name:'Maldives', geoName:'Maldives', value:12,label:'马尔代夫'},
-    {name:'Kazakhstan', geoName:'Kazakhstan', value:13,label:'哈萨克斯坦'},
-    {name:'Uzbekistan', geoName:'Uzbekistan', value:14,label:'乌兹别克斯坦'},
-    {name:'Tajikistan', geoName:'Tajikistan', value:15,label:'塔吉克斯坦'},
-    {name:'Kyrgyzstan', geoName:'Kyrgyzstan', value:16,label:'吉尔吉斯斯坦'},
-    {name:'Turkmenistan', geoName:'Turkmenistan', value:17,label:'土库曼斯坦'},
-    {name:'Belarus', geoName:'Belarus', value:18,label:'白俄罗斯'},
-    {name:'Azerbaijan', geoName:'Azerbaijan', value:19,label:'阿塞拜疆'},
-    {name:'Armenia', geoName:'Armenia', value:20,label:'亚美尼亚'},
-    {name:'Iran', geoName:'Iran', value:21,label:'伊朗'},
-    {name:'Congo', geoName:'Congo', value:22,label:'刚果(布)'},
-    {name:'Zimbabwe', geoName:'Zimbabwe', value:23,label:'津巴布韦'},
-    {name:'Serbia', geoName:'Serbia', value:24,label:'塞尔维亚'},
-    {name:'Slovakia', geoName:'Slovakia', value:25,label:'斯洛伐克'},
-    {name:'Cuba', geoName:'Cuba', value:26,label:'古巴'},
-    {name:'Myanmar', geoName:'Myanmar', value:27,label:'缅甸'}
-];
+  <script>
+  // 出席国家数据
+  const countriesData = [
+    {name:'China', geoNames:['China'], label:'中国', value:1},
+    {name:'Russia', geoNames:['Russia'], label:'俄罗斯', value:2},
+    {name:'Dem. Rep. Korea', geoNames:['Dem. Rep. Korea'], label:'朝鲜', value:3},
+    {name:'Cambodia', geoNames:['Cambodia'], label:'柬埔寨', value:4},
+    {name:'Vietnam', geoNames:['Vietnam'], label:'越南', value:5},
+    {name:'Laos', geoNames:['Laos'], label:'老挝', value:6},
+    {name:'Indonesia', geoNames:['Indonesia'], label:'印度尼西亚', value:7},
+    {name:'Malaysia', geoNames:['Malaysia'], label:'马来西亚', value:8},
+    {name:'Mongolia', geoNames:['Mongolia'], label:'蒙古国', value:9},
+    {name:'Pakistan', geoNames:['Pakistan'], label:'巴基斯坦', value:10},
+    {name:'Nepal', geoNames:['Nepal'], label:'尼泊尔', value:11},
+    {name:'Maldives', geoNames:['Maldives'], label:'马尔代夫', value:12},
+    {name:'Kazakhstan', geoNames:['Kazakhstan'], label:'哈萨克斯坦', value:13},
+    {name:'Uzbekistan', geoNames:['Uzbekistan'], label:'乌兹别克斯坦', value:14},
+    {name:'Tajikistan', geoNames:['Tajikistan'], label:'塔吉克斯坦', value:15},
+    {name:'Kyrgyzstan', geoNames:['Kyrgyzstan'], label:'吉尔吉斯斯坦', value:16},
+    {name:'Turkmenistan', geoNames:['Turkmenistan'], label:'土库曼斯坦', value:17},
+    {name:'Belarus', geoNames:['Belarus'], label:'白俄罗斯', value:18},
+    {name:'Azerbaijan', geoNames:['Azerbaijan'], label:'阿塞拜疆', value:19},
+    {name:'Armenia', geoNames:['Armenia'], label:'亚美尼亚', value:20},
+    {name:'Iran', geoNames:['Iran'], label:'伊朗', value:21},
+    {name:'Congo', geoNames:['Congo'], label:'刚果(布)', value:22},
+    {name:'Zimbabwe', geoNames:['Zimbabwe'], label:'津巴布韦', value:23},
+    {name:'Serbia', geoNames:['Serbia'], label:'塞尔维亚', value:24},
+    {name:'Slovakia', geoNames:['Slovakia'], label:'斯洛伐克', value:25},
+    {name:'Cuba', geoNames:['Cuba'], label:'古巴', value:26},
+    {name:'Myanmar', geoNames:['Myanmar'], label:'缅甸', value:27},
+  ];
 
-// 随机颜色函数
-function getRandomColor(){
-    const letters='0123456789ABCDEF';
-    let color='#';
-    for(let i=0;i<6;i++) color+=letters[Math.floor(Math.random()*16)];
-    return color;
-}
+  // 随机颜色生成
+  function getRandomColor() {
+    const r = Math.floor(Math.random()*180)+50;
+    const g = Math.floor(Math.random()*180)+50;
+    const b = Math.floor(Math.random()*180)+50;
+    return `rgb(${r},${g},${b})`;
+  }
 
-// 每个国家颜色映射
-const colorMap = {};
-countriesData.forEach(c=>{
-    colorMap[c.name] = c.value===1 ? '#ff4d4f' : getRandomColor();
-});
+  // 创建颜色映射
+  const colorMap = {};
+  countriesData.forEach(c=>{
+    if(c.value===1) colorMap[c.name]='#ff4d4f';
+    else colorMap[c.name]=getRandomColor();
+  });
 
-// 初始化 ECharts
-const chart = echarts.init(document.getElementById('mapContainer'));
+  // 初始化 ECharts
+  const chart = echarts.init(document.getElementById('worldMap'));
 
-// 加载世界地图 GeoJSON
-fetch('./asset/geo/world.json')
-.then(res=>res.json())
-.then(worldJson=>{
-    echarts.registerMap('world', worldJson);
-
-    // 生成 mapData，包含所有国家
-    const mapData = worldJson.features.map(f=>{
-        const name = f.properties.name;
-        const c = countriesData.find(c => c.geoName === name || c.name === name);
+  fetch('./asset/geo/world.json')
+    .then(res=>res.json())
+    .then(worldJson=>{
+      const mapData = worldJson.features.map(f=>{
+        const c = countriesData.find(cd=>cd.geoNames.includes(f.properties.name));
         return {
-            name,
-            // 注意：value不能为0，否则 itemStyle.areaColor可能不生效
-            value: c ? c.value : 0.01,
-            itemStyle: {
-                areaColor: c ? colorMap[c.name] : '#f0f0f0'
-            }
+          name:f.properties.name,
+          value:c ? c.value : 0.01,
+          itemStyle:{areaColor: c ? colorMap[c.name] : '#f0f0f0'}
         };
-    });
+      });
 
-    // 配置 ECharts
-    const option = {
-        tooltip: {
-            trigger:'item',
-            formatter: params=>{
-                const c = countriesData.find(c=>c.geoName===params.name || c.name===params.name);
-                if(params.name==='China') return '<b>中国</b><br/>主办国';
-                return c? `<b>${c.label}</b><br/>出席国家` : `<b>${params.name}</b>`;
-            }
-        },
+      const option = {
+        tooltip:{formatter:params=>params.name},
         series:[{
-            type:'map',
-            map:'world',
-            roam:true,
-            label:{
-                show:true,          // 默认显示国家名称
-                color:'#000',
-                fontSize:10,
-                formatter:function(params){
-                    const c = countriesData.find(c=>c.geoName===params.name || c.name===params.name);
-                    return c ? c.label : params.name;
-                }
-            },
-            emphasis:{
-                label:{show:true,fontWeight:'bold',color:'#fff'},
-                itemStyle:{areaColor:'#2a5caa'}
-            },
-            data:mapData
+          type:'map',
+          map:'world',
+          data:mapData,
+          label:{show:true,fontSize:10},
+          roam:true,
+          emphasis:{label:{show:true,fontWeight:'bold'},itemStyle:{areaColor:'#2a5caa'}},
+          itemStyle:{borderColor:'#aaa',borderWidth:0.5}
         }]
-    };
+      };
 
-    chart.setOption(option);
-
-    // 生成右侧出席国家列表
-    const countryListElement = document.getElementById('countryList');
-    const attendingCountries = countriesData.filter(c=>c.value!==1);
-    document.getElementById('countryCount').textContent = attendingCountries.length;
-    attendingCountries.forEach(c=>{
-        const item = document.createElement('div');
-        item.className='country-item';
-        item.innerHTML=`<div class="country-color" style="background-color:${colorMap[c.name]}"></div><span>${c.label}</span>`;
-        countryListElement.appendChild(item);
+      echarts.registerMap('world', worldJson);
+      chart.setOption(option);
     });
 
-    // 窗口大小变化时自动 resize
-    window.addEventListener('resize',()=>{chart.resize();});
-})
-.catch(err=>console.error('加载地图失败',err));
-</script>
+  // 生成右侧列表
+  const attendingCountries = countriesData.filter(c=>c.value!==1);
+  document.getElementById('countryCount').textContent=attendingCountries.length;
+  const listEl = document.getElementById('countryList');
+  attendingCountries.forEach(c=>{
+    const div = document.createElement('div');
+    div.className='country-item';
+    div.innerHTML=`<div class="country-color" style="background-color:${colorMap[c.name]}"></div><span>${c.label}</span>`;
+    listEl.appendChild(div);
+  });
+
+  window.addEventListener('resize',()=>chart.resize());
+  </script>
 </body>
 </html>
