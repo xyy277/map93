@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>9.3 大阅兵国家地图</title>
+<title>9.3 大阅兵 - 国际阵营情况</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <style>
 html, body {margin:0; padding:0; width:100%; height:100%; font-family:sans-serif;}
@@ -78,7 +78,7 @@ header button:hover {
         position:absolute;
         top:70px;
         right:0;
-        width:250px;
+        width:150px;
         max-height:calc(100% - 70px);
         background: rgba(249,249,249,0.95);
         transform: translateX(100%);
@@ -92,7 +92,11 @@ header button:hover {
 <body>
 
 <header>
-    <h1>9.3 大阅兵国家领导人出席情况地图</h1>
+    <h1 style="text-align:center; margin: 20px 0;">
+        <a href="https://github.com/xyy277/map93" target="_blank" style="color: inherit; text-decoration: none;">
+          9.3 大阅兵 - 国际阵营情况
+        </a>
+    </h1>
     <div class="header-buttons">
         <button id="langSwitch">Switch to English</button>
         <button id="labelSwitch">隐藏名称</button>
@@ -106,63 +110,118 @@ header button:hover {
         <h2>出席国家列表</h2>
         <p>共 <strong id="countryCount">0</strong> 个国家</p>
         <div id="countryList"></div>
-        <div class="legend">
-            <div class="legend-item"><div class="legend-color" style="background:#ff4d4f"></div>中国（主办国）</div>
-            <div class="legend-item"><div class="legend-color" style="background:#1890ff"></div>出席国家</div>
-            <div class="legend-item"><div class="legend-color" style="background:#f0f0f0"></div>未出席国家</div>
-        </div>
-        <div class="note">红色：中国，蓝色：出席国家，灰色：未出席国家</div>
     </div>
 </div>
 
+<!-- 底部图例 -->
+<div class="legend">
+    <div class="legend-item"><div class="legend-color" style="background:#ff0000"></div>主办国</div>
+    <div class="legend-item"><div class="legend-color" style="background:#ff4d4f"></div>国家元首或政府首脑</div>
+    <div class="legend-item"><div class="legend-color" style="background:#1890ff"></div>议长或政府副总理</div>
+    <div class="legend-item"><div class="legend-color" style="background:#52c41a"></div>高级别代表</div>
+    <div class="legend-item"><div class="legend-color" style="background:#faad14"></div>前政要</div>
+    <div class="legend-item"><div class="legend-color" style="background:#d9d9d9"></div>未出席/其他</div>
+</div>
+
+<a href="https://github.com/xyy277/map93" target="_blank" 
+   style="
+     position: fixed;
+     right: 20px;
+     bottom: 20px;
+     background: #24292f;
+     color: #fff;
+     padding: 10px 14px;
+     border-radius: 50px;
+     font-size: 14px;
+     font-weight: bold;
+     text-decoration: none;
+     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+     transition: background 0.3s;
+   "
+   onmouseover="this.style.background='#444';"
+   onmouseout="this.style.background='#24292f';">
+  ⭐ 点个赞吧
+</a>
+
 <script>
-// 国家数据
-const countriesData=[
-    {name:'China', en:'China', label:'中国', value:1},
-    {name:'Russia', en:'Russia', label:'俄罗斯', value:2},
-    {name:'Dem. Rep. Korea', en:'Dem. Rep. Korea', label:'朝鲜', value:3},
-    {name:'Cambodia', en:'Cambodia', label:'柬埔寨', value:4},
-    {name:'Vietnam', en:'Vietnam', label:'越南', value:5},
-    {name:'Laos', en:'Laos', label:'老挝', value:6},
-    {name:'Indonesia', en:'Indonesia', label:'印度尼西亚', value:7},
-    {name:'Malaysia', en:'Malaysia', label:'马来西亚', value:8},
-    {name:'Mongolia', en:'Mongolia', label:'蒙古国', value:9},
-    {name:'Pakistan', en:'Pakistan', label:'巴基斯坦', value:10},
-    {name:'Nepal', en:'Nepal', label:'尼泊尔', value:11},
-    {name:'Maldives', en:'Maldives', label:'马尔代夫', value:12},
-    {name:'Kazakhstan', en:'Kazakhstan', label:'哈萨克斯坦', value:13},
-    {name:'Uzbekistan', en:'Uzbekistan', label:'乌兹别克斯坦', value:14},
-    {name:'Tajikistan', en:'Tajikistan', label:'塔吉克斯坦', value:15},
-    {name:'Kyrgyzstan', en:'Kyrgyzstan', label:'吉尔吉斯斯坦', value:16},
-    {name:'Turkmenistan', en:'Turkmenistan', label:'土库曼斯坦', value:17},
-    {name:'Belarus', en:'Belarus', label:'白俄罗斯', value:18},
-    {name:'Azerbaijan', en:'Azerbaijan', label:'阿塞拜疆', value:19},
-    {name:'Armenia', en:'Armenia', label:'亚美尼亚', value:20},
-    {name:'Iran', en:'Iran', label:'伊朗', value:21},
-    {name:'Congo', en:'Congo', label:'刚果(布)', value:22},
-    {name:'Zimbabwe', en:'Zimbabwe', label:'津巴布韦', value:23},
-    {name:'Serbia', en:'Serbia', label:'塞尔维亚', value:24},
-    {name:'Slovakia', en:'Slovakia', label:'斯洛伐克', value:25},
-    {name:'Cuba', en:'Cuba', label:'古巴', value:26},
-    {name:'Myanmar', en:'Myanmar', label:'缅甸', value:27}
+// 国家元首和政府首脑（value=1）、议长和政府副总理（value=2）、高级别代表（value=3）、前政要（value=4）
+const countriesData = [
+    // 国家元首或政府首脑出席 (value=1)
+    {name: 'China', en: 'China', label: '中国', value: 0}, // 主办国
+    {name: 'Russia', en: 'Russia', label: '俄罗斯', value: 1},
+    {name: 'Dem. Rep. Korea', en: 'Dem. Rep. Korea', label: '朝鲜', value: 1},
+    {name: 'Cambodia', en: 'Cambodia', label: '柬埔寨', value: 1},
+    {name: 'Vietnam', en: 'Vietnam', label: '越南', value: 1},
+    {name: 'Laos', en: 'Laos', label: '老挝', value: 1},
+    {name: 'Indonesia', en: 'Indonesia', label: '印度尼西亚', value: 1},
+    {name: 'Malaysia', en: 'Malaysia', label: '马来西亚', value: 1},
+    {name: 'Mongolia', en: 'Mongolia', label: '蒙古国', value: 1},
+    {name: 'Pakistan', en: 'Pakistan', label: '巴基斯坦', value: 1},
+    {name: 'Nepal', en: 'Nepal', label: '尼泊尔', value: 1},
+    {name: 'Maldives', en: 'Maldives', label: '马尔代夫', value: 1},
+    {name: 'Kazakhstan', en: 'Kazakhstan', label: '哈萨克斯坦', value: 1},
+    {name: 'Uzbekistan', en: 'Uzbekistan', label: '乌兹别克斯坦', value: 1},
+    {name: 'Tajikistan', en: 'Tajikistan', label: '塔吉克斯坦', value: 1},
+    {name: 'Kyrgyzstan', en: 'Kyrgyzstan', label: '吉尔吉斯斯坦', value: 1},
+    {name: 'Turkmenistan', en: 'Turkmenistan', label: '土库曼斯坦', value: 1},
+    {name: 'Belarus', en: 'Belarus', label: '白俄罗斯', value: 1},
+    {name: 'Azerbaijan', en: 'Azerbaijan', label: '阿塞拜疆', value: 1},
+    {name: 'Armenia', en: 'Armenia', label: '亚美尼亚', value: 1},
+    {name: 'Iran', en: 'Iran', label: '伊朗', value: 1},
+    {name: 'Congo', en: 'Congo', label: '刚果(布)', value: 1},
+    {name: 'Zimbabwe', en: 'Zimbabwe', label: '津巴布韦', value: 1},
+    {name: 'Serbia', en: 'Serbia', label: '塞尔维亚', value: 1},
+    {name: 'Slovakia', en: 'Slovakia', label: '斯洛伐克', value: 1},
+    {name: 'Cuba', en: 'Cuba', label: '古巴', value: 1},
+    {name: 'Myanmar', en: 'Myanmar', label: '缅甸', value: 1},
+
+    // 议长或政府副总理出席 (value=2)
+    {name: 'South Korea', en: 'South Korea', label: '韩国', value: 2},
+    {name: 'Timor-Leste', en: 'Timor-Leste', label: '东帝汶', value: 2},
+    {name: 'Venezuela', en: 'Venezuela', label: '委内瑞拉', value: 2},
+    {name: 'Singapore', en: 'Singapore', label: '新加坡', value: 2},
+    {name: 'Egypt', en: 'Egypt', label: '埃及', value: 2},
+    {name: 'Bulgaria', en: 'Bulgaria', label: '保加利亚', value: 2},
+
+    // 高级别代表出席 (value=3)
+    {name: 'Brazil', en: 'Brazil', label: '巴西', value: 3},
+    {name: 'Nicaragua', en: 'Nicaragua', label: '尼加拉瓜', value: 3},
+    {name: 'Hungary', en: 'Hungary', label: '匈牙利', value: 3},
+    {name: 'Brunei', en: 'Brunei', label: '文莱', value: 3},
+    {name: 'Bangladesh', en: 'Bangladesh', label: '孟加拉国', value: 3},
+    {name: 'Algeria', en: 'Algeria', label: '阿尔及利亚', value: 3},
+
+    // 前政要出席 (value=4)
+    {name: 'Japan', en: 'Japan', label: '日本', value: 4},
+    {name: 'Switzerland', en: 'Switzerland', label: '瑞士', value: 4},
+    {name: 'Belgium', en: 'Belgium', label: '比利时', value: 4},
+    {name: 'Greece', en: 'Greece', label: '希腊', value: 4},
+    {name: 'Italy', en: 'Italy', label: '意大利', value: 4},
+    {name: 'Romania', en: 'Romania', label: '罗马尼亚', value: 4},
+    {name: 'New Zealand', en: 'New Zealand', label: '新西兰', value: 4},
+    {name: 'Australia', en: 'Australia', label: '澳大利亚', value: 4}
 ];
 
-// 随机颜色
-function getRandomColor(){
-    const r=Math.floor(Math.random()*180)+50;
-    const g=Math.floor(Math.random()*180)+50;
-    const b=Math.floor(Math.random()*180)+50;
-    return `rgb(${r},${g},${b})`;
-}
-
-// 颜色映射
-const colorMap={};
-countriesData.forEach(c=>{
-    colorMap[c.name]=c.value===1?'#ff4d4f':getRandomColor();
+// 阵营情况
+const colorMap = {};
+countriesData.forEach(c => {
+    if (c.value === 0) {
+        colorMap[c.name] = '#ff0000'; // 大红色 - 主办国
+    } else if (c.value === 1) {
+        colorMap[c.name] = '#ff4d4f'; // 红色 - 领导人出席
+    } else if (c.value === 2) {
+        colorMap[c.name] = '#1890ff'; // 蓝色 - 高级代表出席
+    } else if (c.value === 3) {
+        colorMap[c.name] = '#52c41a'; // 绿色 - 普通代表出席
+    } else if (c.value === 4) {
+        colorMap[c.name] = '#faad14'; // 橙色 - 前政要出席
+    } else {
+        colorMap[c.name] = '#d9d9d9'; // 灰色 - 其他情况
+    }
 });
 
 let currentLang='zh';
-let showLabels=true;
+let showLabels=false;
 const chart=echarts.init(document.getElementById('worldMap'));
 
 let worldJsonData=null;
@@ -207,7 +266,7 @@ function updateMap(){
 }
 
 // 列表
-const attendingCountries=countriesData.filter(c=>c.value!==1);
+const attendingCountries=countriesData;
 document.getElementById('countryCount').textContent=attendingCountries.length;
 const listEl=document.getElementById('countryList');
 function renderList(){
@@ -219,7 +278,7 @@ function renderList(){
         listEl.appendChild(div);
     });
 }
-renderList();
+// renderList();
 
 // 按钮事件
 document.getElementById('langSwitch').onclick=()=>{
@@ -234,17 +293,24 @@ document.getElementById('labelSwitch').onclick=()=>{
     updateMap();
 };
 
-// 手机端列表滑出
 const infoPanel=document.querySelector('.info-panel');
 const toggleBtn=document.getElementById('toggleList');
+// 默认隐藏
+infoPanel.style.display = 'none';
 toggleBtn.onclick=()=>{
+    if (infoPanel.style.display === 'none') {
+        infoPanel.style.display = 'block';
+        renderList();
+    } else {
+        infoPanel.style.display = 'none';
+    }
     infoPanel.classList.toggle('show');
     toggleBtn.innerText=infoPanel.classList.contains('show')?'隐藏列表':'显示列表';
 };
 
 // 自动检测屏幕大小
 function checkScreenMode(){
-    const isMobile=window.innerWidth<=768;
+    const isMobile=window.innerWidth<=4396;
     if(isMobile){
         infoPanel.classList.remove('show');
         toggleBtn.innerText='显示列表';
@@ -252,6 +318,8 @@ function checkScreenMode(){
     } else {
         infoPanel.classList.add('show');
         toggleBtn.style.display='none';
+        infoPanel.style.display = 'block';
+        renderList();
     }
 }
 checkScreenMode();
