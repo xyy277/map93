@@ -4,11 +4,11 @@
 
 > 注意：本项目是 **2D ECharts 地图（map / geo）**，颜色表示的是“出席级别/人员等级”，而不是政治阵营或外交关系。
 
-![Web页面效果预览](asset/screenshot.png)
-
 ## 在线预览
 
 项目地址：[https://xyy277.github.io/map93/](https://xyy277.github.io/map93/)
+
+![Web页面效果预览](asset/screenshot.png)
 
 ---
 
