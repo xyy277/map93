@@ -308,9 +308,24 @@ toggleBtn.onclick=()=>{
     toggleBtn.innerText=infoPanel.classList.contains('show')?'隐藏列表':'显示列表';
 };
 
-
+// 自动检测屏幕大小
+function checkScreenMode(){
+    const isMobile=window.innerWidth<=4396;
+    if(isMobile){
+        infoPanel.classList.remove('show');
+        toggleBtn.innerText='显示列表';
+        toggleBtn.style.display='block';
+    } else {
+        infoPanel.classList.add('show');
+        toggleBtn.style.display='none';
+        infoPanel.style.display = 'block';
+        renderList();
+    }
+}
+checkScreenMode();
 window.addEventListener('resize',()=>{
     chart.resize();
+    checkScreenMode();
 });
 
 renderMap();
