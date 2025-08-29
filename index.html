@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>9.3 大阅兵 - 国际阵营情况</title>
+<title><a href="https://github.com/xyy277/map93" target="_blank">9.3 大阅兵 - 国际阵营情况</a></title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <style>
 html, body {margin:0; padding:0; width:100%; height:100%; font-family:sans-serif;}
@@ -78,7 +78,7 @@ header button:hover {
         position:absolute;
         top:70px;
         right:0;
-        width:250px;
+        width:150px;
         max-height:calc(100% - 70px);
         background: rgba(249,249,249,0.95);
         transform: translateX(100%);
@@ -92,7 +92,11 @@ header button:hover {
 <body>
 
 <header>
-    <h1>9.3 大阅兵国家阵营分布分析</h1>
+    <h1 style="text-align:center; margin: 20px 0;">
+        <a href="https://github.com/xyy277/map93" target="_blank" style="color: inherit; text-decoration: none;">
+          9.3 大阅兵 - 国际阵营情况
+        </a>
+    </h1>
     <div class="header-buttons">
         <button id="langSwitch">Switch to English</button>
         <button id="labelSwitch">隐藏名称</button>
@@ -118,6 +122,26 @@ header button:hover {
     <div class="legend-item"><div class="legend-color" style="background:#faad14"></div>前政要</div>
     <div class="legend-item"><div class="legend-color" style="background:#d9d9d9"></div>未出席/其他</div>
 </div>
+
+<a href="https://github.com/xyy277/map93" target="_blank" 
+   style="
+     position: fixed;
+     right: 20px;
+     bottom: 20px;
+     background: #24292f;
+     color: #fff;
+     padding: 10px 14px;
+     border-radius: 50px;
+     font-size: 14px;
+     font-weight: bold;
+     text-decoration: none;
+     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+     transition: background 0.3s;
+   "
+   onmouseover="this.style.background='#444';"
+   onmouseout="this.style.background='#24292f';">
+  ⭐ 点个赞吧
+</a>
 
 <script>
 // 国家元首和政府首脑（value=1）、议长和政府副总理（value=2）、高级别代表（value=3）、前政要（value=4）
@@ -254,7 +278,7 @@ function renderList(){
         listEl.appendChild(div);
     });
 }
-renderList();
+// renderList();
 
 // 按钮事件
 document.getElementById('langSwitch').onclick=()=>{
@@ -269,30 +293,24 @@ document.getElementById('labelSwitch').onclick=()=>{
     updateMap();
 };
 
-// 手机端列表滑出
 const infoPanel=document.querySelector('.info-panel');
 const toggleBtn=document.getElementById('toggleList');
+// 默认隐藏
+infoPanel.style.display = 'none';
 toggleBtn.onclick=()=>{
+    if (infoPanel.style.display === 'none') {
+        infoPanel.style.display = 'block';
+        renderList();
+    } else {
+        infoPanel.style.display = 'none';
+    }
     infoPanel.classList.toggle('show');
     toggleBtn.innerText=infoPanel.classList.contains('show')?'隐藏列表':'显示列表';
 };
 
-// 自动检测屏幕大小
-function checkScreenMode(){
-    const isMobile=window.innerWidth<=768;
-    if(isMobile){
-        infoPanel.classList.remove('show');
-        toggleBtn.innerText='显示列表';
-        toggleBtn.style.display='block';
-    } else {
-        infoPanel.classList.add('show');
-        toggleBtn.style.display='none';
-    }
-}
-checkScreenMode();
+
 window.addEventListener('resize',()=>{
     chart.resize();
-    checkScreenMode();
 });
 
 renderMap();
