@@ -6,6 +6,10 @@
 
 ![Web页面效果预览](asset/screenshot.png)
 
+## 在线预览
+
+项目地址：[https://xyy277.github.io/map93/](https://xyy277.github.io/map93/)
+
 ---
 
 ## 功能特点
@@ -33,11 +37,6 @@
 > 说明：颜色由页面脚本中 `colorMap` 生成。如果你想调整颜色，请编辑 HTML 中对应的 `colorMap` 定义（见下方“如何修改颜色/等级”）。
 
 ---
-
-
-## 在线预览
-
-项目地址：[https://xyy277.github.io/map93/](https://xyy277.github.io/map93/)
 
 ![移动端页面效果预览](asset/app.png)
 
